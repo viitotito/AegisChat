@@ -10,18 +10,18 @@ public class TopicManager {
     private final Map<String, Set<ClientHandler>> topics = new ConcurrentHashMap<>();
     private final Set<String> connectedUsers = new HashSet<>();
 
-    public synchronized boolean createTopic(String topic, ClientHandler owner) {
+    public synchronized boolean create(String topic, ClientHandler owner) {
         if (topics.containsKey(topic)) {
             return false;
         }
 
         Set<ClientHandler> subscribers = new HashSet<>();
-        subscribers.add(owner); // entra automaticamente
+        subscribers.add(owner); 
         topics.put(topic, subscribers);
         return true;
     }
 
-    public synchronized boolean subscribeTopic(String topic, ClientHandler client) {
+    public synchronized boolean subscribe(String topic, ClientHandler client) {
         if (!topics.containsKey(topic)) {
             return false;
         }
@@ -30,7 +30,7 @@ public class TopicManager {
         return true;
     }
 
-    public synchronized void unsubscribeTopic(String topic, ClientHandler client) {
+    public synchronized void unsubscribe(String topic, ClientHandler client) {
         if (!topics.containsKey(topic)) {
             return;
         }
@@ -42,7 +42,7 @@ public class TopicManager {
         }
     }
 
-    public synchronized boolean deleteTopic(String topic, ClientHandler requester) {
+    public synchronized boolean delete(String topic, ClientHandler requester) {
         if (!topics.containsKey(topic)) {
             return false;
         }
@@ -57,7 +57,7 @@ public class TopicManager {
         return false;
     }
 
-    public synchronized void publishTopic(String topic, String sender, String content) {
+    public synchronized void publish(String topic, String sender, String content) {
         if (!topics.containsKey(topic)) {
             return;
         }
@@ -71,7 +71,6 @@ public class TopicManager {
         if (connectedUsers.contains(name)) {
             return false;
         }
-        connectedUsers.remove(name);
         connectedUsers.add(name);
         return true;
     }

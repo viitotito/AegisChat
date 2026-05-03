@@ -8,12 +8,14 @@ import java.net.Socket;
 public class ClientHandler implements Runnable {
 
     private final Socket socket;
+    private final BrokerServer server;
+
     private final TopicManager topicManager;
 
-    private BufferedReader in;
-    private PrintWriter out;
+    private BufferedReader input;
+    private PrintWriter output;
+
     private String clientName;
-    private final BrokerServer server;
 
     public ClientHandler(Socket socket, TopicManager topicManager, BrokerServer server) {
         this.socket = socket;
@@ -24,15 +26,19 @@ public class ClientHandler implements Runnable {
     @Override
     public void run() {
         try {
-            in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-            out = new PrintWriter(socket.getOutputStream(), true);
+            input = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+            output = new PrintWriter(socket.getOutputStream(), true);
 
-            out.println("Digite seu nome:");
-            clientName = in.readLine();
+            output.println("Digite seu nome:");
+            clientName = input.readLine();
 
             synchronized (topicManager) {
                 if (!topicManager.registerUser(clientName)) {
                     send(new Message("ERROR", "", "BROKER", "Nome já está em uso."));
+
+                    server.log("Tentativa de conexão falhou: nome duplicado -> " + clientName);
+
+                    server.removeClient(this);
                     socket.close();
                     return;
                 }
@@ -40,16 +46,18 @@ public class ClientHandler implements Runnable {
             send(new Message("INFO", "", "BROKER",
                     "Conectado como " + clientName));
 
+            server.log("Cliente conectado: " + clientName);
+
             String line;
 
-            while ((line = in.readLine()) != null) {
+            while ((line = input.readLine()) != null) {
 
                 Message msg = Message.fromString(line);
 
                 switch (msg.getType()) {
 
-                    case "CREATE_TOPIC":
-                        if (topicManager.createTopic(msg.getTopic(), this)) {
+                    case "CREATE":
+                        if (topicManager.create(msg.getTopic(), this)) {
                             send(new Message("INFO", msg.getTopic(), "BROKER",
                                     "Tópico criado e inscrição realizada."));
                         } else {
@@ -59,7 +67,7 @@ public class ClientHandler implements Runnable {
                         break;
 
                     case "SUBSCRIBE":
-                        if (topicManager.subscribeTopic(msg.getTopic(), this)) {
+                        if (topicManager.subscribe(msg.getTopic(), this)) {
                             send(new Message("INFO", msg.getTopic(), "BROKER",
                                     "Inscrito no tópico."));
                         } else {
@@ -69,13 +77,13 @@ public class ClientHandler implements Runnable {
                         break;
 
                     case "UNSUBSCRIBE":
-                        topicManager.unsubscribeTopic(msg.getTopic(), this);
+                        topicManager.unsubscribe(msg.getTopic(), this);
                         send(new Message("INFO", msg.getTopic(), "BROKER",
                                 "Saiu do tópico."));
                         break;
 
-                    case "DELETE_TOPIC":
-                        if (topicManager.deleteTopic(msg.getTopic(), this)) {
+                    case "DELETE":
+                        if (topicManager.delete(msg.getTopic(), this)) {
                             send(new Message("INFO", msg.getTopic(), "BROKER",
                                     "Tópico removido."));
                         } else {
@@ -91,7 +99,7 @@ public class ClientHandler implements Runnable {
                             break;
                         }
 
-                        topicManager.publishTopic(
+                        topicManager.publish(
                                 msg.getTopic(),
                                 clientName,
                                 msg.getContent()
@@ -122,7 +130,7 @@ public class ClientHandler implements Runnable {
     }
 
     public void send(Message message) {
-        out.println(message.toString());
+        output.println(message.toString());
     }
 
     public void close() {

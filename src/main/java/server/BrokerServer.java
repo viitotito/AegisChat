@@ -34,7 +34,6 @@ public class BrokerServer {
                 while (running) {
                     try {
                         Socket socket = serverSocket.accept();
-                        window.addLog("Cliente conectado: " + socket.getInetAddress());
 
                         ClientHandler handler = new ClientHandler(socket, topicManager, this);
                         clients.add(handler);
@@ -64,7 +63,6 @@ public class BrokerServer {
                 serverSocket.close();
             }
 
-            // 🔥 FECHAR TODOS OS CLIENTES
             for (ClientHandler client : clients) {
                 client.close();
             }
@@ -80,5 +78,9 @@ public class BrokerServer {
 
     public void removeClient(ClientHandler client) {
         clients.remove(client);
+    }
+
+    public void log(String message) {
+        window.addLog(message);
     }
 }

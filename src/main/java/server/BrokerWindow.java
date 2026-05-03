@@ -99,6 +99,7 @@ public class BrokerWindow extends javax.swing.JFrame {
 
             jButtonStart.setEnabled(false);
             jButtonStop.setEnabled(true);
+            jTextFieldPort.setEnabled(false);
 
         } catch (Exception e) {
             addLog("Erro ao inicializar o servidor: " + e.getMessage());
@@ -112,6 +113,7 @@ public class BrokerWindow extends javax.swing.JFrame {
 
         jButtonStart.setEnabled(true);
         jButtonStop.setEnabled(false);
+        jTextFieldPort.setEnabled(true);
     }//GEN-LAST:event_jButtonStopActionPerformed
 
     /**

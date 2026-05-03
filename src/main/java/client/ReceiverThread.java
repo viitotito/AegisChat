@@ -42,7 +42,10 @@ public class ReceiverThread implements Runnable {
                             break;
 
                         case "ERROR":
-                            window.appendMessage("[ERRO] " + message.getContent());
+                            JOptionPane.showMessageDialog(window,
+                                    message.getContent(),
+                                    "Erro",
+                                    JOptionPane.ERROR_MESSAGE);
                             break;
                     }
                 });

@@ -1,5 +1,7 @@
 package client;
 
+import javax.swing.JOptionPane;
+
 public class ChatWindow extends javax.swing.JFrame {
 
     /**
@@ -240,43 +242,77 @@ public class ChatWindow extends javax.swing.JFrame {
     private void jButtonCreateActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonCreateActionPerformed
         String topic = getTopic();
 
-        if (!topic.isEmpty()) {
-            clientApp.createTopic(topic);
+        if (topic.isEmpty()) {
+            JOptionPane.showMessageDialog(this,
+                    "Informe o nome do tópico.",
+                    "Erro",
+                    JOptionPane.ERROR_MESSAGE);
+            return;
         }
+        clientApp.createTopic(topic);
     }//GEN-LAST:event_jButtonCreateActionPerformed
 
     private void jButtonDeleteActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonDeleteActionPerformed
         String topic = getTopic();
 
-        if (!topic.isEmpty()) {
-            clientApp.deleteTopic(topic);
+        if (topic.isEmpty()) {
+            JOptionPane.showMessageDialog(this,
+                    "Informe o nome do tópico para deletar.",
+                    "Erro",
+                    JOptionPane.ERROR_MESSAGE);
+            return;
         }
+        clientApp.deleteTopic(topic);
     }//GEN-LAST:event_jButtonDeleteActionPerformed
 
     private void jButtonJoinActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonJoinActionPerformed
         String topic = getTopic();
 
-        if (!topic.isEmpty()) {
-            clientApp.subscribeTopic(topic);
+        if (topic.isEmpty()) {
+            JOptionPane.showMessageDialog(this,
+                    "Informe o nome do tópico para entrar.",
+                    "Erro",
+                    JOptionPane.ERROR_MESSAGE);
+            return;
         }
+        clientApp.subscribeTopic(topic);
     }//GEN-LAST:event_jButtonJoinActionPerformed
 
     private void jButtonLeaveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonLeaveActionPerformed
         String topic = getTopic();
 
-        if (!topic.isEmpty()) {
-            clientApp.unsubscribeTopic(topic);
+        if (topic.isEmpty()) {
+            JOptionPane.showMessageDialog(this,
+                    "Informe o nome do tópico para sair.",
+                    "Erro",
+                    JOptionPane.ERROR_MESSAGE);
+            return;
         }
+        clientApp.unsubscribeTopic(topic);
     }//GEN-LAST:event_jButtonLeaveActionPerformed
 
     private void jButtonSendActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonSendActionPerformed
         String message = getMessage();
         String topic = getTopic();
 
-        if (!message.isEmpty() && !topic.isEmpty()) {
-            clientApp.publishTopic(topic, message);
-            clearMessage();
+        if (topic.isEmpty()) {
+            JOptionPane.showMessageDialog(this,
+                    "Informe um tópico antes de enviar mensagem.",
+                    "Erro",
+                    JOptionPane.ERROR_MESSAGE);
+            return;
         }
+
+        if (message.isEmpty()) {
+            JOptionPane.showMessageDialog(this,
+                    "Digite uma mensagem.",
+                    "Erro",
+                    JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        clientApp.publishTopic(topic, message);
+        clearMessage();
     }//GEN-LAST:event_jButtonSendActionPerformed
 
     // Variables declaration - do not modify//GEN-BEGIN:variables

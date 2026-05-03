@@ -1,5 +1,8 @@
 package client;
 
+import javax.swing.JOptionPane;
+import model.ConnectResult;
+
 public class ClientWindow extends javax.swing.JFrame {
 
     private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(ClientWindow.class.getName());
@@ -162,16 +165,22 @@ public class ClientWindow extends javax.swing.JFrame {
             if (jTextFieldHost.getText().isEmpty()) {
                 jLabelExcHost.setVisible(true);
                 hasError = true;
+            } else {
+                jLabelExcHost.setVisible(false);
             }
 
             if (jTextFieldPort.getText().isEmpty()) {
                 jLabelExcPort.setVisible(true);
                 hasError = true;
+            } else {
+                jLabelExcPort.setVisible(false);
             }
 
             if (jTextFieldName.getText().isEmpty()) {
                 jLabelExcName.setVisible(true);
                 hasError = true;
+            } else {
+                jLabelExcName.setVisible(false);
             }
 
             if (hasError) {
@@ -179,19 +188,49 @@ public class ClientWindow extends javax.swing.JFrame {
             }
 
             String host = jTextFieldHost.getText();
-            int port = Integer.parseInt(jTextFieldPort.getText());
+            String portText = jTextFieldPort.getText();
+
+            int port;
+
+            try {
+                port = Integer.parseInt(portText);
+
+                if (port <= 0 || port > 65535) {
+                    JOptionPane.showMessageDialog(this,
+                            "A porta deve estar entre 1 e 65535.",
+                            "Porta inválida",
+                            JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+
+            } catch (NumberFormatException e) {
+                JOptionPane.showMessageDialog(this,
+                        "A porta deve ser um número válido.",
+                        "Erro",
+                        JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+            
             String name = jTextFieldName.getText();
 
             ChatWindow chatWin = new ChatWindow();
             clientApp = new ClientApp(host, port, name, chatWin);
 
-            boolean connected = clientApp.connect();
+            ConnectResult result = clientApp.connect();
 
-            if (!connected) {
-                javax.swing.JOptionPane.showMessageDialog(this,
-                        "Nome já está em uso ou erro ao conectar.",
-                        "Erro",
-                        javax.swing.JOptionPane.ERROR_MESSAGE);
+            if (result == ConnectResult.NAME_IN_USE) {
+                JOptionPane.showMessageDialog(this,
+                        "Este nome já está em uso. Escolha outro.",
+                        "Nome duplicado",
+                        JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+
+            if (result == ConnectResult.SERVER_OFFLINE) {
+                JOptionPane.showMessageDialog(this,
+                        "Não foi possível conectar ao servidor.\nVerifique se ele está online.",
+                        "Servidor indisponível",
+                        JOptionPane.ERROR_MESSAGE);
                 return;
             }
 

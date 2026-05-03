@@ -7,6 +7,8 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
+import javax.swing.JOptionPane;
+import model.ConnectResult;
 
 public class ClientApp {
 
@@ -26,46 +28,57 @@ public class ClientApp {
         this.window = window;
     }
 
-    public boolean connect() {
+    public ConnectResult connect() {
         try {
             socket = new Socket(host, port);
 
             in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             out = new PrintWriter(socket.getOutputStream(), true);
 
-            in.readLine();
+            in.readLine(); 
             out.println(name);
 
             String response = in.readLine();
+
+            if (response == null) {
+                return ConnectResult.SERVER_OFFLINE;
+            }
+
             Message msg = Message.fromString(response);
 
             if ("ERROR".equals(msg.getType())) {
-                return false;
+                return ConnectResult.NAME_IN_USE;
             }
 
             new Thread(new ReceiverThread(in, window)).start();
 
-            return true;
+            return ConnectResult.SUCCESS;
 
         } catch (IOException e) {
-            return false;
+            return ConnectResult.SERVER_OFFLINE;
         }
     }
 
     public void createTopic(String topic) {
         if (topic.isEmpty()) {
-            window.appendMessage("[ERRO] Informe um tópico.");
+            JOptionPane.showMessageDialog(window,
+                    "Informe um tópico.",
+                    "Erro",
+                    JOptionPane.ERROR_MESSAGE);
             return;
         }
 
-        out.println(new Message("CREATE_TOPIC", topic, name, ""));
+        out.println(new Message("CREATE", topic, name, ""));
 
         window.appendMessage("[INFO] Criando tópico e entrando: " + topic);
     }
 
     public void subscribeTopic(String topic) {
         if (topic.isEmpty()) {
-            window.appendMessage("[ERRO] Informe um tópico.");
+            JOptionPane.showMessageDialog(window,
+                    "Informe um tópico.",
+                    "Erro",
+                    JOptionPane.ERROR_MESSAGE);
             return;
         }
 
@@ -81,13 +94,16 @@ public class ClientApp {
     }
 
     public void deleteTopic(String topic) {
-        out.println(new Message("DELETE_TOPIC", topic, name, ""));
+        out.println(new Message("DELETE", topic, name, ""));
     }
 
     public void publishTopic(String topic, String content) {
 
         if (topic.isEmpty()) {
-            window.appendMessage("[ERRO] Informe um tópico.");
+            JOptionPane.showMessageDialog(window,
+                    "Informe um tópico.",
+                    "Erro",
+                    JOptionPane.ERROR_MESSAGE);
             return;
         }
 
