@@ -8,6 +8,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class TopicManager {
 
     private final Map<String, Set<ClientHandler>> topics = new ConcurrentHashMap<>();
+    private final Set<String> connectedUsers = new HashSet<>();
 
     public synchronized boolean createTopic(String topic, ClientHandler owner) {
         if (topics.containsKey(topic)) {
@@ -63,6 +64,29 @@ public class TopicManager {
 
         for (ClientHandler client : topics.get(topic)) {
             client.send(Message.fromString("MESSAGE;" + topic + ";" + sender + ";" + content));
+        }
+    }
+
+    public synchronized boolean registerUser(String name) {
+        if (connectedUsers.contains(name)) {
+            return false;
+        }
+        connectedUsers.remove(name);
+        connectedUsers.add(name);
+        return true;
+    }
+
+    public synchronized void removeUser(String name) {
+        connectedUsers.remove(name);
+    }
+
+    public synchronized boolean isSubscribed(String topic, ClientHandler client) {
+        return topics.containsKey(topic) && topics.get(topic).contains(client);
+    }
+
+    public synchronized void removeClientFromAllTopics(ClientHandler client) {
+        for (String topic : topics.keySet()) {
+            topics.get(topic).remove(client);
         }
     }
 }

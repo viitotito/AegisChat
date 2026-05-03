@@ -13,10 +13,12 @@ public class ClientHandler implements Runnable {
     private BufferedReader in;
     private PrintWriter out;
     private String clientName;
+    private final BrokerServer server;
 
-    public ClientHandler(Socket socket, TopicManager topicManager) {
+    public ClientHandler(Socket socket, TopicManager topicManager, BrokerServer server) {
         this.socket = socket;
         this.topicManager = topicManager;
+        this.server = server;
     }
 
     @Override
@@ -28,6 +30,13 @@ public class ClientHandler implements Runnable {
             out.println("Digite seu nome:");
             clientName = in.readLine();
 
+            synchronized (topicManager) {
+                if (!topicManager.registerUser(clientName)) {
+                    send(new Message("ERROR", "", "BROKER", "Nome já está em uso."));
+                    socket.close();
+                    return;
+                }
+            }
             send(new Message("INFO", "", "BROKER",
                     "Conectado como " + clientName));
 
@@ -76,21 +85,50 @@ public class ClientHandler implements Runnable {
                         break;
 
                     case "PUBLISH":
+                        if (!topicManager.isSubscribed(msg.getTopic(), this)) {
+                            send(new Message("ERROR", msg.getTopic(), "BROKER",
+                                    "Você não está inscrito neste tópico."));
+                            break;
+                        }
+
                         topicManager.publishTopic(
                                 msg.getTopic(),
                                 clientName,
                                 msg.getContent()
                         );
                         break;
+
+                    case "DISCONNECT":
+                        topicManager.removeUser(clientName);
+                        topicManager.removeClientFromAllTopics(this);
+
+                        send(new Message("INFO", "", "BROKER", "Desconectado."));
+                        socket.close();
+                        return;
                 }
             }
 
         } catch (Exception e) {
             System.out.println("Erro no cliente: " + e.getMessage());
+            topicManager.removeUser(clientName);
+            topicManager.removeClientFromAllTopics(this);
+            server.removeClient(this);
+        } finally {
+            if (clientName != null) {
+                topicManager.removeUser(clientName);
+            }
+            topicManager.removeClientFromAllTopics(this);
         }
     }
 
     public void send(Message message) {
         out.println(message.toString());
+    }
+
+    public void close() {
+        try {
+            socket.close();
+        } catch (IOException ignored) {
+        }
     }
 }

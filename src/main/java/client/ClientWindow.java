@@ -185,10 +185,18 @@ public class ClientWindow extends javax.swing.JFrame {
             ChatWindow chatWin = new ChatWindow();
             clientApp = new ClientApp(host, port, name, chatWin);
 
-            clientApp.connect();
+            boolean connected = clientApp.connect();
+
+            if (!connected) {
+                javax.swing.JOptionPane.showMessageDialog(this,
+                        "Nome já está em uso ou erro ao conectar.",
+                        "Erro",
+                        javax.swing.JOptionPane.ERROR_MESSAGE);
+                return;
+            }
 
             chatWin.setClientApp(clientApp);
-            chatWin.setUsername(name); 
+            chatWin.setUsername(name);
             chatWin.setVisible(true);
 
             this.setVisible(false);

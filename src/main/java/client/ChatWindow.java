@@ -35,6 +35,17 @@ public class ChatWindow extends javax.swing.JFrame {
         jTextAreaChat.append(message + "\n");
     }
 
+    public void setDisconnected() {
+        jButtonCreate.setEnabled(false);
+        jButtonDelete.setEnabled(false);
+        jButtonJoin.setEnabled(false);
+        jButtonLeave.setEnabled(false);
+
+        jButtonSend.setEnabled(false);
+        jTextFieldMessage.setEnabled(false);
+        jTextFieldTopicName.setEnabled(false);
+    }
+
     public javax.swing.JButton getSendButton() {
         return jButtonSend;
     }
@@ -218,10 +229,12 @@ public class ChatWindow extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void jButtonQuitActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonQuitActionPerformed
-
+        if (clientApp != null) {
+            clientApp.disconnect();
+        }
 
         new ClientWindow().setVisible(true);
-        this.setVisible(false);
+        this.dispose();
     }//GEN-LAST:event_jButtonQuitActionPerformed
 
     private void jButtonCreateActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonCreateActionPerformed

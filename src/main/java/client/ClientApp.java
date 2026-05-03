@@ -26,17 +26,30 @@ public class ClientApp {
         this.window = window;
     }
 
-    public void connect() throws IOException {
+    public boolean connect() {
+        try {
+            socket = new Socket(host, port);
 
-        socket = new Socket(host, port);
+            in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+            out = new PrintWriter(socket.getOutputStream(), true);
 
-        in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-        out = new PrintWriter(socket.getOutputStream(), true);
+            in.readLine();
+            out.println(name);
 
-        in.readLine();
-        out.println(name);
+            String response = in.readLine();
+            Message msg = Message.fromString(response);
 
-        new Thread(new ReceiverThread(in, window)).start();
+            if ("ERROR".equals(msg.getType())) {
+                return false;
+            }
+
+            new Thread(new ReceiverThread(in, window)).start();
+
+            return true;
+
+        } catch (IOException e) {
+            return false;
+        }
     }
 
     public void createTopic(String topic) {
@@ -81,7 +94,23 @@ public class ClientApp {
         if (content.isEmpty()) {
             return;
         }
-
+        if (out == null) {
+            window.appendMessage("[ERRO] Sem conexão com o servidor.");
+            return;
+        }
         out.println(new Message("PUBLISH", topic, name, content));
+    }
+
+    public void disconnect() {
+        try {
+            if (out != null) {
+                out.println(new Message("DISCONNECT", "", name, ""));
+            }
+
+            if (socket != null && !socket.isClosed()) {
+                socket.close();
+            }
+        } catch (IOException ignored) {
+        }
     }
 }

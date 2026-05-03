@@ -19,9 +19,12 @@ public class ReceiverThread implements Runnable {
     public void run() {
 
         try {
-            String line;
+            while (true) {
+                String line = in.readLine();
 
-            while ((line = in.readLine()) != null) {
+                if (line == null) {
+                    throw new Exception("Servidor caiu");
+                }
 
                 Message message = Message.fromString(line);
 
@@ -46,7 +49,10 @@ public class ReceiverThread implements Runnable {
             }
 
         } catch (Exception e) {
-            window.appendMessage("[ERRO] Conexão encerrada.");
+            SwingUtilities.invokeLater(() -> {
+                window.appendMessage("[ERRO] Servidor desconectado. Conexão encerrada.");
+                window.setDisconnected();
+            });
         } finally {
             try {
                 in.close();

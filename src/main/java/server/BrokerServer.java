@@ -3,6 +3,8 @@ package server;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class BrokerServer {
 
@@ -12,12 +14,14 @@ public class BrokerServer {
     private ServerSocket serverSocket;
     private boolean running;
 
+    private final Set<ClientHandler> clients = ConcurrentHashMap.newKeySet();
+
     public BrokerServer(int port, BrokerWindow window) {
         this.port = port;
         this.window = window;
     }
 
-    public void start() {
+    public boolean start() {
         try {
             TopicManager topicManager = new TopicManager();
 
@@ -26,23 +30,29 @@ public class BrokerServer {
 
             window.addLog("Broker iniciado na porta " + port);
 
-            while (running) {
-                try {
-                    Socket socket = serverSocket.accept();
-                    window.addLog("Cliente conectado: " + socket.getInetAddress());
+            new Thread(() -> {
+                while (running) {
+                    try {
+                        Socket socket = serverSocket.accept();
+                        window.addLog("Cliente conectado: " + socket.getInetAddress());
 
-                    ClientHandler handler = new ClientHandler(socket, topicManager);
-                    new Thread(handler).start();
+                        ClientHandler handler = new ClientHandler(socket, topicManager, this);
+                        clients.add(handler);
+                        new Thread(handler).start();
 
-                } catch (IOException e) {
-                    if (running) {
-                        window.addLog("Erro: " + e.getMessage());
+                    } catch (IOException e) {
+                        if (running) {
+                            window.addLog("Erro: " + e.getMessage());
+                        }
                     }
                 }
-            }
+            }).start();
+
+            return true;
 
         } catch (IOException e) {
             window.addLog("Erro ao iniciar broker: " + e.getMessage());
+            return false;
         }
     }
 
@@ -54,10 +64,21 @@ public class BrokerServer {
                 serverSocket.close();
             }
 
+            // 🔥 FECHAR TODOS OS CLIENTES
+            for (ClientHandler client : clients) {
+                client.close();
+            }
+
+            clients.clear();
+
             window.addLog("Broker encerrado.");
 
         } catch (IOException e) {
             window.addLog("Erro ao encerrar broker: " + e.getMessage());
         }
+    }
+
+    public void removeClient(ClientHandler client) {
+        clients.remove(client);
     }
 }
