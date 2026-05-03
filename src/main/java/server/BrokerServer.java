@@ -7,56 +7,57 @@ import java.net.Socket;
 public class BrokerServer {
 
     private final int port;
-    private boolean isRunning;
+    private final BrokerWindow window;
 
     private ServerSocket serverSocket;
-    private final BrokerWindow brokerWindow;
+    private boolean running;
 
-    public BrokerServer(int port, BrokerWindow brokerWindow) {
+    public BrokerServer(int port, BrokerWindow window) {
         this.port = port;
-        this.brokerWindow = brokerWindow;
-    }
-
-    private void addLog(String message) {
-        javax.swing.SwingUtilities.invokeLater(() -> {
-            brokerWindow.addLog(message);
-        });
+        this.window = window;
     }
 
     public void start() {
-        new Thread(() -> {
-            try {
-                TopicManager topicManager = new TopicManager();
-
-                this.serverSocket = new ServerSocket(port);
-                this.isRunning = true;
-
-                addLog("Servidor iniciado na porta: " + port);
-
-                while (isRunning) {
-                    Socket clientSocket = serverSocket.accept();
-
-                    addLog("Cliente conectado: " + clientSocket.getInetAddress());
-
-                    ClientHandler clientHandler = new ClientHandler(clientSocket, topicManager);
-
-                    new Thread(clientHandler).start();
-                }
-
-            } catch (IOException e) {
-                System.out.println("");
-            }
-        }).start();
-    }
-
-    public void stop() {
-        isRunning = false;
         try {
-            serverSocket.close();
-            addLog("Servidor parado");
+            TopicManager topicManager = new TopicManager();
+
+            serverSocket = new ServerSocket(port);
+            running = true;
+
+            window.addLog("Broker iniciado na porta " + port);
+
+            while (running) {
+                try {
+                    Socket socket = serverSocket.accept();
+                    window.addLog("Cliente conectado: " + socket.getInetAddress());
+
+                    ClientHandler handler = new ClientHandler(socket, topicManager);
+                    new Thread(handler).start();
+
+                } catch (IOException e) {
+                    if (running) {
+                        window.addLog("Erro: " + e.getMessage());
+                    }
+                }
+            }
+
         } catch (IOException e) {
-            addLog("Erro ao parar o servidor: " + e.getMessage());
+            window.addLog("Erro ao iniciar broker: " + e.getMessage());
         }
     }
 
+    public void stop() {
+        running = false;
+
+        try {
+            if (serverSocket != null && !serverSocket.isClosed()) {
+                serverSocket.close();
+            }
+
+            window.addLog("Broker encerrado.");
+
+        } catch (IOException e) {
+            window.addLog("Erro ao encerrar broker: " + e.getMessage());
+        }
+    }
 }

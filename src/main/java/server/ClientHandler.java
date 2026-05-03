@@ -1,90 +1,96 @@
 package server;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
-import java.net.Socket;
 import model.Message;
+
+import java.io.*;
+import java.net.Socket;
 
 public class ClientHandler implements Runnable {
 
     private final Socket socket;
     private final TopicManager topicManager;
 
-    private BufferedReader input;
-    private PrintWriter output;
-
+    private BufferedReader in;
+    private PrintWriter out;
     private String clientName;
-
-    public String getClientName() {
-        return clientName;
-    }
 
     public ClientHandler(Socket socket, TopicManager topicManager) {
         this.socket = socket;
         this.topicManager = topicManager;
     }
 
-    public void send(Message message) {
-        output.println(message.toString());
-    }
-
     @Override
     public void run() {
         try {
-            input = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-            output = new PrintWriter(socket.getOutputStream(), true);
+            in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+            out = new PrintWriter(socket.getOutputStream(), true);
 
-            output.println("Digite seu nome:");
-            clientName = input.readLine();
+            out.println("Digite seu nome:");
+            clientName = in.readLine();
 
-            send(new Message("INFO", "", "BROKER", "Conectado como " + clientName));
+            send(new Message("INFO", "", "BROKER",
+                    "Conectado como " + clientName));
 
             String line;
 
-            while ((line = input.readLine()) != null) {
+            while ((line = in.readLine()) != null) {
 
-                Message message = Message.fromString(line);
+                Message msg = Message.fromString(line);
 
-                switch (message.getType()) {
-                    case "CREATE":
-                        if (topicManager.create(message.getTopic(), this)) {
-                            send(new Message("INFO", message.getTopic(), "BROKER", "Tópico " + message.getTopic() + " criado."));
+                switch (msg.getType()) {
+
+                    case "CREATE_TOPIC":
+                        if (topicManager.createTopic(msg.getTopic(), this)) {
+                            send(new Message("INFO", msg.getTopic(), "BROKER",
+                                    "Tópico criado e inscrição realizada."));
                         } else {
-                            send(new Message("ERROR", message.getTopic(), "BROKER", "Tópico " + message.getTopic() + " já existe."));
+                            send(new Message("ERROR", msg.getTopic(), "BROKER",
+                                    "Tópico já existe."));
                         }
                         break;
 
                     case "SUBSCRIBE":
-                        if (topicManager.subscribe(message.getTopic(), this)) {
-                            send(new Message("INFO", message.getTopic(), "BROKER", "Inscrito no tópico " + message.getTopic() + "."));
+                        if (topicManager.subscribeTopic(msg.getTopic(), this)) {
+                            send(new Message("INFO", msg.getTopic(), "BROKER",
+                                    "Inscrito no tópico."));
                         } else {
-                            send(new Message("ERROR", message.getTopic(), "BROKER", "Tópico " + message.getTopic() + " inexistente."));
+                            send(new Message("ERROR", msg.getTopic(), "BROKER",
+                                    "Tópico inexistente."));
                         }
                         break;
 
                     case "UNSUBSCRIBE":
-                        topicManager.unsubscribe(message.getTopic(), this);
-                        send(new Message("INFO", message.getTopic(), "BROKER", "Saiu do tópico " + message.getTopic() + "."));
+                        topicManager.unsubscribeTopic(msg.getTopic(), this);
+                        send(new Message("INFO", msg.getTopic(), "BROKER",
+                                "Saiu do tópico."));
                         break;
 
-                    case "DELETE":
-                        if (topicManager.delete(message.getTopic(), this)) {
-                            send(new Message("INFO", message.getTopic(), "BROKER", "Tópico " + message.getTopic() + " removido ."));
+                    case "DELETE_TOPIC":
+                        if (topicManager.deleteTopic(msg.getTopic(), this)) {
+                            send(new Message("INFO", msg.getTopic(), "BROKER",
+                                    "Tópico removido."));
                         } else {
-                            send(new Message("ERROR", message.getTopic(), "BROKER", "Você deve ser o único inscrito no tópico " + message.getTopic() + "."));
+                            send(new Message("ERROR", msg.getTopic(), "BROKER",
+                                    "Você deve ser o único inscrito."));
                         }
                         break;
 
                     case "PUBLISH":
-                        topicManager.publish(message.getTopic(), this, message.getContent());
+                        topicManager.publishTopic(
+                                msg.getTopic(),
+                                clientName,
+                                msg.getContent()
+                        );
                         break;
                 }
             }
 
         } catch (Exception e) {
-            System.out.println("Erro ao conectar cliente: " + e.getMessage());
+            System.out.println("Erro no cliente: " + e.getMessage());
         }
     }
 
+    public void send(Message message) {
+        out.println(message.toString());
+    }
 }

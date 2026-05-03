@@ -40,6 +40,7 @@ public class BrokerWindow extends javax.swing.JFrame {
         jLabelPort.setText("Port:");
         jPanelControls.add(jLabelPort);
 
+        jTextFieldPort.setText("5000");
         jTextFieldPort.setToolTipText("Ex: 5000");
         jTextFieldPort.setMinimumSize(new java.awt.Dimension(100, 22));
         jTextFieldPort.setPreferredSize(new java.awt.Dimension(100, 22));
@@ -87,20 +88,20 @@ public class BrokerWindow extends javax.swing.JFrame {
         try {
             int port = Integer.parseInt(jTextFieldPort.getText());
 
-            if (port <= 0 || port > 65536) {
+            if (port <= 0 || port > 65535) {
                 addLog("Porta inválida");
                 return;
             }
-            
+
             brokerServer = new BrokerServer(port, this);
 
-            brokerServer.start();
+            new Thread(() -> brokerServer.start()).start();
 
             jButtonStart.setEnabled(false);
             jButtonStop.setEnabled(true);
 
         } catch (Exception e) {
-            addLog("Erro ao inicializar o server: " + e.getMessage());
+            addLog("Erro ao inicializar o servidor: " + e.getMessage());
         }
     }//GEN-LAST:event_jButtonStartActionPerformed
 

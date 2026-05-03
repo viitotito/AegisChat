@@ -35,14 +35,14 @@ public class Message {
         return type + ";" + topic + ";" + sender + ";" + content;
     }
 
-    public static Message fromString(String message){
-        String[] partsOfMessage = message.split(";",4);
-        
-        String type = partsOfMessage.length > 0 ? partsOfMessage[0] : "";
-        String topic = partsOfMessage.length > 1 ? partsOfMessage[1] : "";
-        String sender = partsOfMessage.length > 2 ? partsOfMessage[2] : "";
-        String content = partsOfMessage.length > 3 ? partsOfMessage[3] : "";
-        
+    public static Message fromString(String text) {
+        String[] parts = text.split(";", 4);
+
+        String type = parts.length > 0 ? parts[0] : "";
+        String topic = parts.length > 1 ? parts[1] : "";
+        String sender = parts.length > 2 ? parts[2] : "";
+        String content = parts.length > 3 ? parts[3] : "";
+
         return new Message(type, topic, sender, content);
     }
 }

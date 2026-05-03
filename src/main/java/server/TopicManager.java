@@ -1,28 +1,26 @@
 package server;
 
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 import model.Message;
+
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class TopicManager {
 
     private final Map<String, Set<ClientHandler>> topics = new ConcurrentHashMap<>();
 
-    public synchronized boolean create(String topic, ClientHandler owner) {
+    public synchronized boolean createTopic(String topic, ClientHandler owner) {
         if (topics.containsKey(topic)) {
             return false;
         }
 
         Set<ClientHandler> subscribers = new HashSet<>();
-        subscribers.add(owner);
-
+        subscribers.add(owner); // entra automaticamente
         topics.put(topic, subscribers);
         return true;
     }
 
-    public synchronized boolean subscribe(String topic, ClientHandler client) {
+    public synchronized boolean subscribeTopic(String topic, ClientHandler client) {
         if (!topics.containsKey(topic)) {
             return false;
         }
@@ -31,7 +29,7 @@ public class TopicManager {
         return true;
     }
 
-    public synchronized void unsubscribe(String topic, ClientHandler client) {
+    public synchronized void unsubscribeTopic(String topic, ClientHandler client) {
         if (!topics.containsKey(topic)) {
             return;
         }
@@ -43,34 +41,28 @@ public class TopicManager {
         }
     }
 
-    public synchronized boolean delete(String topic, ClientHandler client) {
+    public synchronized boolean deleteTopic(String topic, ClientHandler requester) {
         if (!topics.containsKey(topic)) {
             return false;
         }
 
         Set<ClientHandler> clients = topics.get(topic);
 
-        if (clients.size() == 1 && clients.contains(client)) {
+        if (clients.size() == 1 && clients.contains(requester)) {
             topics.remove(topic);
             return true;
         }
+
         return false;
     }
 
-    public synchronized void publish(String topic, ClientHandler sender, String content) {
+    public synchronized void publishTopic(String topic, String sender, String content) {
         if (!topics.containsKey(topic)) {
             return;
         }
 
-        Set<ClientHandler> subscribers = topics.get(topic);
-
-        if (!subscribers.contains(sender)) {
-            sender.send(Message.fromString("ERROR;" + topic + ";BROKER;Você não está inscrito neste tópico"));
-            return;
-        }
-
-        for (ClientHandler client : subscribers) {
-            client.send(Message.fromString("MESSAGE;" + topic + ";" + sender.getClientName() + ";" + content));
+        for (ClientHandler client : topics.get(topic)) {
+            client.send(Message.fromString("MESSAGE;" + topic + ";" + sender + ";" + content));
         }
     }
 }
