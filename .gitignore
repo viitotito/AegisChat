@@ -3,3 +3,5 @@
 /nbproject/private/
 /*.class
 /target/
+/aegis-model/target/
+/aegis-client/target/
