@@ -38,6 +38,8 @@ public class ClientWindow extends javax.swing.JFrame {
         jLabelExcName = new javax.swing.JLabel();
         jLabelExcHost = new javax.swing.JLabel();
         jLabelExcPort = new javax.swing.JLabel();
+        jLabelCertificate = new javax.swing.JLabel();
+        jButtonSearch = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("Aegis Client");
@@ -78,6 +80,12 @@ public class ClientWindow extends javax.swing.JFrame {
         jLabelExcPort.setForeground(new java.awt.Color(255, 0, 0));
         jLabelExcPort.setText("*Port empty");
 
+        jLabelCertificate.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
+        jLabelCertificate.setText("Certificate:");
+
+        jButtonSearch.setText("Search...");
+        jButtonSearch.addActionListener(this::jButtonSearchActionPerformed);
+
         javax.swing.GroupLayout jPanelControlsLayout = new javax.swing.GroupLayout(jPanelControls);
         jPanelControls.setLayout(jPanelControlsLayout);
         jPanelControlsLayout.setHorizontalGroup(
@@ -88,27 +96,31 @@ public class ClientWindow extends javax.swing.JFrame {
                     .addGroup(jPanelControlsLayout.createSequentialGroup()
                         .addComponent(jLabelName)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addGroup(jPanelControlsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addGroup(jPanelControlsLayout.createSequentialGroup()
-                                .addComponent(jLabelExcName)
-                                .addGap(0, 0, Short.MAX_VALUE))
-                            .addComponent(jTextFieldName)))
+                        .addComponent(jLabelExcName)
+                        .addGap(0, 169, Short.MAX_VALUE))
                     .addGroup(jPanelControlsLayout.createSequentialGroup()
                         .addComponent(jLabelHost)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addGap(12, 12, 12)
                         .addGroup(jPanelControlsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addGroup(jPanelControlsLayout.createSequentialGroup()
-                                .addComponent(jTextFieldHost, javax.swing.GroupLayout.PREFERRED_SIZE, 100, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addGap(18, 18, 18)
-                                .addComponent(jLabel1))
-                            .addComponent(jLabelExcHost))
+                                .addGroup(jPanelControlsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                    .addGroup(jPanelControlsLayout.createSequentialGroup()
+                                        .addComponent(jTextFieldHost, javax.swing.GroupLayout.PREFERRED_SIZE, 106, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                        .addComponent(jLabel1))
+                                    .addComponent(jLabelExcHost))
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addGroup(jPanelControlsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                    .addGroup(jPanelControlsLayout.createSequentialGroup()
+                                        .addComponent(jLabelExcPort)
+                                        .addGap(0, 0, Short.MAX_VALUE))
+                                    .addComponent(jTextFieldPort)))
+                            .addComponent(jTextFieldName)))
+                    .addGroup(jPanelControlsLayout.createSequentialGroup()
+                        .addComponent(jLabelCertificate)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addGroup(jPanelControlsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jLabelExcPort)
-                            .addComponent(jTextFieldPort, javax.swing.GroupLayout.PREFERRED_SIZE, 100, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addGap(0, 0, Short.MAX_VALUE))
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanelControlsLayout.createSequentialGroup()
-                        .addGap(0, 0, Short.MAX_VALUE)
+                        .addComponent(jButtonSearch)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addComponent(jButtonEnter)))
                 .addContainerGap())
         );
@@ -131,8 +143,11 @@ public class ClientWindow extends javax.swing.JFrame {
                     .addComponent(jLabelName))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jLabelExcName)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jButtonEnter)
+                .addGap(17, 17, 17)
+                .addGroup(jPanelControlsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabelCertificate)
+                    .addComponent(jButtonSearch)
+                    .addComponent(jButtonEnter))
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
@@ -144,14 +159,14 @@ public class ClientWindow extends javax.swing.JFrame {
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jPanelBackground, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(jPanelBackground, javax.swing.GroupLayout.DEFAULT_SIZE, 458, Short.MAX_VALUE)
                 .addContainerGap())
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jPanelBackground, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(jPanelBackground, javax.swing.GroupLayout.DEFAULT_SIZE, 271, Short.MAX_VALUE)
                 .addContainerGap())
         );
 
@@ -259,9 +274,15 @@ public class ClientWindow extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_jButtonEnterActionPerformed
 
+    private void jButtonSearchActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonSearchActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_jButtonSearchActionPerformed
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton jButtonEnter;
+    private javax.swing.JButton jButtonSearch;
     private javax.swing.JLabel jLabel1;
+    private javax.swing.JLabel jLabelCertificate;
     private javax.swing.JLabel jLabelExcHost;
     private javax.swing.JLabel jLabelExcName;
     private javax.swing.JLabel jLabelExcPort;
