@@ -1,33 +1,81 @@
 package server;
 
-import java.io.InputStream;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.Files;
 import java.util.Properties;
 
 public class ConfigLoader {
     
-    private static final Properties properties = new Properties();
+    private static final Path CERTS_DIR = resolveCertsDirectory();
+    private static final Properties properties = loadProperties();
     
-    static {
-        try (InputStream input = ConfigLoader.class.getClassLoader().getResourceAsStream("application.properties")) {
-            if (input == null) {
-                // Tenta carregar do diretório raiz (quando rodado via IDE)
-                java.nio.file.Files.lines(java.nio.file.Paths.get("application.properties"))
-                    .filter(line -> !line.startsWith("#") && !line.trim().isEmpty())
-                    .forEach(line -> {
-                        String[] parts = line.split("=", 2);
-                        if (parts.length == 2) {
-                            properties.setProperty(parts[0].trim(), parts[1].trim());
-                        }
-                    });
-            } else {
-                properties.load(input);
+    private static Path resolveCertsDirectory() {
+        // Tenta encontrar a pasta 'certs' começando do diretório atual
+        Path current = Paths.get(System.getProperty("user.dir")).toAbsolutePath();
+        
+        while (current != null) {
+            Path certsPath = current.resolve("certs");
+            if (Files.isDirectory(certsPath)) {
+                System.out.println("[ConfigLoader] Pasta 'certs' encontrada em: " + certsPath);
+                return certsPath;
             }
-        } catch (Exception e) {
-            System.err.println("Aviso: Não foi possível carregar application.properties. Usando valores padrão.");
+            current = current.getParent();
         }
+        
+        throw new RuntimeException("ERRO: Pasta 'certs' não encontrada! Certifique-se de executar desde a raiz do projeto AegisChat.");
+    }
+    
+    private static Properties loadProperties() {
+        Properties props = new Properties();
+        Path propsFile = CERTS_DIR.resolve("application.properties");
+        
+        if (Files.exists(propsFile)) {
+            try {
+                props.load(Files.newInputStream(propsFile));
+                System.out.println("[ConfigLoader] application.properties carregado de: " + propsFile);
+            } catch (Exception e) {
+                System.err.println("[ConfigLoader] Erro ao carregar application.properties: " + e.getMessage());
+            }
+        } else {
+            System.out.println("[ConfigLoader] Nenhum application.properties encontrado em certs/. Usando valores padrão.");
+        }
+        
+        return props;
     }
     
     public static String getServerCertPath() {
-        return properties.getProperty("server.cert.path", "server-ca.crt");
+        // Primeiro tenta obter do properties (se existir application.properties em certs/)
+        String certPath = properties.getProperty("server.cert.path");
+        
+        if (certPath != null && !certPath.isEmpty()) {
+            System.out.println("[ConfigLoader] Usando server.cert.path do application.properties: " + certPath);
+            Path resolvedPath = resolvePath(certPath);
+            if (!Files.exists(resolvedPath)) {
+                throw new RuntimeException("ERRO: Certificado da CA do servidor não encontrado em " + resolvedPath);
+            }
+            return resolvedPath.toString();
+        }
+        
+        // Fallback para valor padrão
+        Path certFilePath = CERTS_DIR.resolve("server-ca.crt");
+        if (!Files.exists(certFilePath)) {
+            throw new RuntimeException("ERRO: Certificado da CA do servidor não encontrado em " + certFilePath);
+        }
+        return certFilePath.toString();
+    }
+    
+    private static Path resolvePath(String pathStr) {
+        Path path = Paths.get(pathStr);
+        // Se for caminho relativo, resolve em relação a CERTS_DIR ou diretório atual
+        if (!path.isAbsolute()) {
+            // Tenta em relação a CERTS_DIR primeiro
+            if (Files.exists(CERTS_DIR.resolve(path))) {
+                return CERTS_DIR.resolve(path);
+            }
+            // Depois em relação ao diretório atual
+            return Paths.get(System.getProperty("user.dir")).resolve(path);
+        }
+        return path;
     }
 }
