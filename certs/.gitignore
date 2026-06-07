@@ -2,6 +2,9 @@
 *.key
 *.p12
 *.pem
+*.srl
+*.crt
+*.csr
 
 # Keep README and .gitkeep
 !README.md
