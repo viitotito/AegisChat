@@ -1,6 +1,9 @@
 package client;
 
+import java.io.File;
+import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import model.ConnectResult;
 
 public class ClientWindow extends javax.swing.JFrame {
@@ -8,6 +11,7 @@ public class ClientWindow extends javax.swing.JFrame {
     private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(ClientWindow.class.getName());
 
     private ClientApp clientApp;
+    private String selectedCertPath;
 
     /**
      * Creates new form ClientWindow
@@ -84,6 +88,7 @@ public class ClientWindow extends javax.swing.JFrame {
         jLabelCertificate.setText("Certificate:");
 
         jButtonSearch.setText("Search...");
+        jButtonSearch.setToolTipText("Search for certificates.");
         jButtonSearch.addActionListener(this::jButtonSearchActionPerformed);
 
         javax.swing.GroupLayout jPanelControlsLayout = new javax.swing.GroupLayout(jPanelControls);
@@ -224,11 +229,19 @@ public class ClientWindow extends javax.swing.JFrame {
                         JOptionPane.ERROR_MESSAGE);
                 return;
             }
-            
+
             String name = jTextFieldName.getText();
 
+            if (selectedCertPath == null || selectedCertPath.isEmpty()) {
+                JOptionPane.showMessageDialog(this,
+                        "Selecione um certificado antes de conectar.",
+                        "Certificado não selecionado",
+                        JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
             ChatWindow chatWin = new ChatWindow();
-            clientApp = new ClientApp(host, port, name, chatWin);
+            clientApp = new ClientApp(host, port, name, chatWin, selectedCertPath);
 
             ConnectResult result = clientApp.connect();
 
@@ -275,7 +288,34 @@ public class ClientWindow extends javax.swing.JFrame {
     }//GEN-LAST:event_jButtonEnterActionPerformed
 
     private void jButtonSearchActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonSearchActionPerformed
-        // TODO add your handling code here:
+        try {
+            JFileChooser chooser = new JFileChooser(ConfigLoader.getCertsDirectoryPath().toFile());
+            chooser.setDialogTitle("Select client certificate");
+            chooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+            chooser.setAcceptAllFileFilterUsed(false);
+            chooser.setFileFilter(new FileNameExtensionFilter("Certificates (*.crt)", "crt"));
+
+            int option = chooser.showOpenDialog(this);
+            if (option == JFileChooser.APPROVE_OPTION) {
+                File selectedFile = chooser.getSelectedFile();
+                if (selectedFile != null && selectedFile.exists()) {
+                    selectedCertPath = selectedFile.getAbsolutePath();
+
+                    String fileName = selectedFile.getName();
+
+                    jLabelCertificate.setText(
+                            "Certificate: " + truncateText(fileName, 10)
+                    );
+
+                    jLabelCertificate.setToolTipText(fileName);
+                }
+            }
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this,
+                    "Não foi possível abrir o seletor de certificado: " + e.getMessage(),
+                    "Erro",
+                    JOptionPane.ERROR_MESSAGE);
+        }
     }//GEN-LAST:event_jButtonSearchActionPerformed
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
@@ -299,5 +339,18 @@ public class ClientWindow extends javax.swing.JFrame {
         this.jLabelExcHost.setVisible(false);
         this.jLabelExcPort.setVisible(false);
         this.jLabelExcName.setVisible(false);
+
+        selectedCertPath = null;
+
+        jLabelCertificate.setText("Certificate: None");
+        jLabelCertificate.setToolTipText(null);
+    }
+
+    private String truncateText(String text, int maxLength) {
+        if (text == null || text.length() <= maxLength) {
+            return text;
+        }
+
+        return text.substring(0, maxLength - 3) + "...";
     }
 }

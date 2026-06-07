@@ -35,6 +35,15 @@ public class ClientApp {
         this.serverCertPath = ConfigLoader.getServerCertPath();
     }
 
+    public ClientApp(String host, int port, String name, ChatWindow window, String selectedClientCertPath) {
+        this.host = host;
+        this.port = port;
+        this.name = name;
+        this.window = window;
+        this.clientCertPath = selectedClientCertPath;
+        this.serverCertPath = ConfigLoader.getServerCertPath();
+    }
+
     public ConnectResult connect() {
         try {
             socket = new Socket(host, port);

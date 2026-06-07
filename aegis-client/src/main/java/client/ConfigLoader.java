@@ -103,6 +103,10 @@ public class ConfigLoader {
         return certFilePath.toString();
     }
     
+    public static Path getCertsDirectoryPath() {
+        return CERTS_DIR;
+    }
+    
     private static Path resolvePath(String pathStr) {
         Path path = Paths.get(pathStr);
         // Se for caminho relativo, resolve em relação a CERTS_DIR ou diretório atual
