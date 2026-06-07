@@ -1,0 +1,8 @@
+# Ignore private key and sensitive files
+*.key
+*.p12
+*.pem
+
+# Keep README and .gitkeep
+!README.md
+!.gitkeep

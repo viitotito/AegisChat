@@ -189,7 +189,6 @@ public class ClientWindow extends javax.swing.JFrame {
 
             String host = jTextFieldHost.getText();
             String portText = jTextFieldPort.getText();
-
             int port;
 
             try {
@@ -226,10 +225,22 @@ public class ClientWindow extends javax.swing.JFrame {
                 return;
             }
 
-            if (result == ConnectResult.SERVER_OFFLINE) {
+            if (result == ConnectResult.NAME_IN_USE) {
                 JOptionPane.showMessageDialog(this,
-                        "Não foi possível conectar ao servidor.\nVerifique se ele está online.",
-                        "Servidor indisponível",
+                        "Este nome já está em uso. Escolha outro.",
+                        "Nome duplicado",
+                        JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+
+            if (result == ConnectResult.AUTH_FAILED || result == ConnectResult.SERVER_OFFLINE) {
+                String detail = clientApp.getFailureReason();
+                if (detail == null || detail.isEmpty()) {
+                    detail = "Não foi possível conectar ao servidor. Verifique se ele está online.";
+                }
+                JOptionPane.showMessageDialog(this,
+                        detail,
+                        result == ConnectResult.AUTH_FAILED ? "Autenticação falhou" : "Servidor indisponível",
                         JOptionPane.ERROR_MESSAGE);
                 return;
             }
