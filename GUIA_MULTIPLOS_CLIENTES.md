@@ -72,95 +72,10 @@ openssl x509 -req -in client3.csr -CA server-ca.crt -CAkey server-ca.key -CAcrea
 
 ---
 
-### Opção 2: Via Terminal PowerShell (Recomendado para múltiplos)
-
-**1. Compile o projeto:**
-```powershell
-cd c:\Users\fabri\Downloads\AegisChat
-mvn clean install  # Ou se não funcionar, compile via NetBeans
-```
-
-**2. Terminal 1 - Servidor:**
-```powershell
-cd c:\Users\fabri\Downloads\AegisChat
-
-# Define CLIENT_ID e roda o servidor
-java -cp aegis-server/target/classes:aegis-model/target/classes server.ServerMain
-```
-
-**3. Terminal 2 - Cliente 1:**
-```powershell
-cd c:\Users\fabri\Downloads\AegisChat
-
-# Define CLIENT_ID=1
-$env:CLIENT_ID=1
-java -cp aegis-client/target/classes:aegis-model/target/classes client.ClientMain
-```
-
 Quando a interface pedir dados:
 - **Host:** `localhost`
 - **Port:** `5000`
 - **Name:** `Cliente1` ✅ (DEVE corresponder ao CN do certificado)
-
-**4. Terminal 3 - Cliente 2:**
-```powershell
-cd c:\Users\fabri\Downloads\AegisChat
-
-# Define CLIENT_ID=2
-$env:CLIENT_ID=2
-java -cp aegis-client/target/classes:aegis-model/target/classes client.ClientMain
-```
-
-Quando a interface pedir dados:
-- **Host:** `localhost`
-- **Port:** `5000`
-- **Name:** `Cliente2` ✅ (DEVE corresponder ao CN do certificado)
-
-**5. Terminal 4 - Cliente 3 (opcional):**
-```powershell
-$env:CLIENT_ID=3
-java -cp aegis-client/target/classes:aegis-model/target/classes client.ClientMain
-```
-
-Quando a interface pedir dados:
-- **Host:** `localhost`
-- **Port:** `5000`
-- **Name:** `Cliente3` ✅
-
----
-
-### Opção 3: Script Automatizado (.bat)
-
-Crie um arquivo `run_clients.bat` na raiz do projeto:
-
-```batch
-@echo off
-cd c:\Users\fabri\Downloads\AegisChat
-
-REM Servidor em janela nova
-start "Servidor" cmd /k "java -cp aegis-server/target/classes;aegis-model/target/classes server.ServerMain"
-
-REM Aguarda 2 segundos
-timeout /t 2
-
-REM Cliente 1
-start "Cliente 1" cmd /k "set CLIENT_ID=1 && java -cp aegis-client/target/classes;aegis-model/target/classes client.ClientMain"
-
-REM Cliente 2
-start "Cliente 2" cmd /k "set CLIENT_ID=2 && java -cp aegis-client/target/classes;aegis-model/target/classes client.ClientMain"
-
-REM Cliente 3
-start "Cliente 3" cmd /k "set CLIENT_ID=3 && java -cp aegis-client/target/classes;aegis-model/target/classes client.ClientMain"
-```
-
-Execute:
-```bash
-run_clients.bat
-```
-
-Vai abrir 4 janelas automaticamente! 🎉
-
----
 
 ## 🔐 Como Funciona a Autenticação
 
@@ -174,17 +89,6 @@ Vai abrir 4 janelas automaticamente! 🎉
 3. **Servidor valida** que o nome digitado (`Cliente1`, `Cliente2`, etc.) corresponde ao CN do certificado
 
 4. **Cada cliente** usa seu certificado único, então não há conflitos!
-
----
-
-## ✅ Checklist para Múltiplos Clientes
-
-- [ ] Certificados gerados (CA + Cliente1, Cliente2, etc.)
-- [ ] Projeto compilado com `mvn clean install`
-- [ ] Servidor rodando
-- [ ] Variável `CLIENT_ID` definida para cada cliente
-- [ ] Nome digitado corresponde ao CN do certificado
-- [ ] Cada cliente em um terminal/janela separada
 
 ---
 
@@ -207,17 +111,3 @@ Vai abrir 4 janelas automaticamente! 🎉
 - ✅ Host/Port estão corretos?
 
 ---
-
-## 📝 Resumo Técnico
-
-| Recurso | Localização | Descrição |
-|---------|------------|-----------|
-| Certificados | `certs/` | CA e certificados dos clientes |
-| ConfigLoader | `aegis-client/ConfigLoader.java` | Lê CLIENT_ID e busca certificados |
-| | `aegis-server/ConfigLoader.java` | Lê configuração do servidor |
-| Validação | `aegis-server/ClientHandler.java` | Valida nome vs. CN do certificado |
-| Múltiplos clientes | BrokerServer.java | Suporta via ConcurrentHashMap |
-
----
-
-**Pronto! Você pode agora rodar quantos clientes quiser simultaneamente! 🚀**
