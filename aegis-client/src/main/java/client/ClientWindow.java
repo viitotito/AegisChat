@@ -1,6 +1,9 @@
 package client;
 
+import java.io.File;
+import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import model.ConnectResult;
 
 public class ClientWindow extends javax.swing.JFrame {
@@ -8,6 +11,7 @@ public class ClientWindow extends javax.swing.JFrame {
     private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(ClientWindow.class.getName());
 
     private ClientApp clientApp;
+    private String selectedCertPath;
 
     /**
      * Creates new form ClientWindow
@@ -38,6 +42,8 @@ public class ClientWindow extends javax.swing.JFrame {
         jLabelExcName = new javax.swing.JLabel();
         jLabelExcHost = new javax.swing.JLabel();
         jLabelExcPort = new javax.swing.JLabel();
+        jLabelCertificate = new javax.swing.JLabel();
+        jButtonSearch = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("Aegis Client");
@@ -78,6 +84,13 @@ public class ClientWindow extends javax.swing.JFrame {
         jLabelExcPort.setForeground(new java.awt.Color(255, 0, 0));
         jLabelExcPort.setText("*Port empty");
 
+        jLabelCertificate.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
+        jLabelCertificate.setText("Certificate:");
+
+        jButtonSearch.setText("Search...");
+        jButtonSearch.setToolTipText("Search for certificates.");
+        jButtonSearch.addActionListener(this::jButtonSearchActionPerformed);
+
         javax.swing.GroupLayout jPanelControlsLayout = new javax.swing.GroupLayout(jPanelControls);
         jPanelControls.setLayout(jPanelControlsLayout);
         jPanelControlsLayout.setHorizontalGroup(
@@ -88,27 +101,31 @@ public class ClientWindow extends javax.swing.JFrame {
                     .addGroup(jPanelControlsLayout.createSequentialGroup()
                         .addComponent(jLabelName)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addGroup(jPanelControlsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addGroup(jPanelControlsLayout.createSequentialGroup()
-                                .addComponent(jLabelExcName)
-                                .addGap(0, 0, Short.MAX_VALUE))
-                            .addComponent(jTextFieldName)))
+                        .addComponent(jLabelExcName)
+                        .addGap(0, 169, Short.MAX_VALUE))
                     .addGroup(jPanelControlsLayout.createSequentialGroup()
                         .addComponent(jLabelHost)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addGap(12, 12, 12)
                         .addGroup(jPanelControlsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addGroup(jPanelControlsLayout.createSequentialGroup()
-                                .addComponent(jTextFieldHost, javax.swing.GroupLayout.PREFERRED_SIZE, 100, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addGap(18, 18, 18)
-                                .addComponent(jLabel1))
-                            .addComponent(jLabelExcHost))
+                                .addGroup(jPanelControlsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                    .addGroup(jPanelControlsLayout.createSequentialGroup()
+                                        .addComponent(jTextFieldHost, javax.swing.GroupLayout.PREFERRED_SIZE, 106, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                        .addComponent(jLabel1))
+                                    .addComponent(jLabelExcHost))
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addGroup(jPanelControlsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                    .addGroup(jPanelControlsLayout.createSequentialGroup()
+                                        .addComponent(jLabelExcPort)
+                                        .addGap(0, 0, Short.MAX_VALUE))
+                                    .addComponent(jTextFieldPort)))
+                            .addComponent(jTextFieldName)))
+                    .addGroup(jPanelControlsLayout.createSequentialGroup()
+                        .addComponent(jLabelCertificate)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addGroup(jPanelControlsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jLabelExcPort)
-                            .addComponent(jTextFieldPort, javax.swing.GroupLayout.PREFERRED_SIZE, 100, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addGap(0, 0, Short.MAX_VALUE))
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanelControlsLayout.createSequentialGroup()
-                        .addGap(0, 0, Short.MAX_VALUE)
+                        .addComponent(jButtonSearch)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addComponent(jButtonEnter)))
                 .addContainerGap())
         );
@@ -131,8 +148,11 @@ public class ClientWindow extends javax.swing.JFrame {
                     .addComponent(jLabelName))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jLabelExcName)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jButtonEnter)
+                .addGap(17, 17, 17)
+                .addGroup(jPanelControlsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabelCertificate)
+                    .addComponent(jButtonSearch)
+                    .addComponent(jButtonEnter))
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
@@ -144,14 +164,14 @@ public class ClientWindow extends javax.swing.JFrame {
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jPanelBackground, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(jPanelBackground, javax.swing.GroupLayout.DEFAULT_SIZE, 458, Short.MAX_VALUE)
                 .addContainerGap())
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jPanelBackground, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(jPanelBackground, javax.swing.GroupLayout.DEFAULT_SIZE, 271, Short.MAX_VALUE)
                 .addContainerGap())
         );
 
@@ -189,7 +209,6 @@ public class ClientWindow extends javax.swing.JFrame {
 
             String host = jTextFieldHost.getText();
             String portText = jTextFieldPort.getText();
-
             int port;
 
             try {
@@ -210,11 +229,19 @@ public class ClientWindow extends javax.swing.JFrame {
                         JOptionPane.ERROR_MESSAGE);
                 return;
             }
-            
+
             String name = jTextFieldName.getText();
 
+            if (selectedCertPath == null || selectedCertPath.isEmpty()) {
+                JOptionPane.showMessageDialog(this,
+                        "Selecione um certificado antes de conectar.",
+                        "Certificado não selecionado",
+                        JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
             ChatWindow chatWin = new ChatWindow();
-            clientApp = new ClientApp(host, port, name, chatWin);
+            clientApp = new ClientApp(host, port, name, chatWin, selectedCertPath);
 
             ConnectResult result = clientApp.connect();
 
@@ -226,10 +253,22 @@ public class ClientWindow extends javax.swing.JFrame {
                 return;
             }
 
-            if (result == ConnectResult.SERVER_OFFLINE) {
+            if (result == ConnectResult.NAME_IN_USE) {
                 JOptionPane.showMessageDialog(this,
-                        "Não foi possível conectar ao servidor.\nVerifique se ele está online.",
-                        "Servidor indisponível",
+                        "Este nome já está em uso. Escolha outro.",
+                        "Nome duplicado",
+                        JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+
+            if (result == ConnectResult.AUTH_FAILED || result == ConnectResult.SERVER_OFFLINE) {
+                String detail = clientApp.getFailureReason();
+                if (detail == null || detail.isEmpty()) {
+                    detail = "Não foi possível conectar ao servidor. Verifique se ele está online.";
+                }
+                JOptionPane.showMessageDialog(this,
+                        detail,
+                        result == ConnectResult.AUTH_FAILED ? "Autenticação falhou" : "Servidor indisponível",
                         JOptionPane.ERROR_MESSAGE);
                 return;
             }
@@ -248,9 +287,42 @@ public class ClientWindow extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_jButtonEnterActionPerformed
 
+    private void jButtonSearchActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonSearchActionPerformed
+        try {
+            JFileChooser chooser = new JFileChooser(ConfigLoader.getCertsDirectoryPath().toFile());
+            chooser.setDialogTitle("Select client certificate");
+            chooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+            chooser.setAcceptAllFileFilterUsed(false);
+            chooser.setFileFilter(new FileNameExtensionFilter("Certificates (*.crt)", "crt"));
+
+            int option = chooser.showOpenDialog(this);
+            if (option == JFileChooser.APPROVE_OPTION) {
+                File selectedFile = chooser.getSelectedFile();
+                if (selectedFile != null && selectedFile.exists()) {
+                    selectedCertPath = selectedFile.getAbsolutePath();
+
+                    String fileName = selectedFile.getName();
+
+                    jLabelCertificate.setText(
+                            "Certificate: " + truncateText(fileName, 10)
+                    );
+
+                    jLabelCertificate.setToolTipText(fileName);
+                }
+            }
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this,
+                    "Não foi possível abrir o seletor de certificado: " + e.getMessage(),
+                    "Erro",
+                    JOptionPane.ERROR_MESSAGE);
+        }
+    }//GEN-LAST:event_jButtonSearchActionPerformed
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton jButtonEnter;
+    private javax.swing.JButton jButtonSearch;
     private javax.swing.JLabel jLabel1;
+    private javax.swing.JLabel jLabelCertificate;
     private javax.swing.JLabel jLabelExcHost;
     private javax.swing.JLabel jLabelExcName;
     private javax.swing.JLabel jLabelExcPort;
@@ -267,5 +339,18 @@ public class ClientWindow extends javax.swing.JFrame {
         this.jLabelExcHost.setVisible(false);
         this.jLabelExcPort.setVisible(false);
         this.jLabelExcName.setVisible(false);
+
+        selectedCertPath = null;
+
+        jLabelCertificate.setText("Certificate: None");
+        jLabelCertificate.setToolTipText(null);
+    }
+
+    private String truncateText(String text, int maxLength) {
+        if (text == null || text.length() <= maxLength) {
+            return text;
+        }
+
+        return text.substring(0, maxLength - 3) + "...";
     }
 }

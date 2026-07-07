@@ -38,6 +38,8 @@ public class ReceiverThread implements Runnable {
                             break;
 
                         case "INFO":
+                        case "SUBSCRIBED":
+                        case "UNSUBSCRIBED":
                             window.appendMessage("[INFO] " + message.getContent());
                             break;
 
