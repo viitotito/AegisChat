@@ -4,6 +4,7 @@ import java.io.File;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import javax.swing.filechooser.FileNameExtensionFilter;
+import model.ConfigLoader;
 import model.ConnectResult;
 
 public class ClientWindow extends javax.swing.JFrame {

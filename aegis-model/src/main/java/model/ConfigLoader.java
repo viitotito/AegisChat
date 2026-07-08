@@ -1,4 +1,4 @@
-package client;
+package model;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;

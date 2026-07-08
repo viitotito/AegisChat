@@ -1,7 +1,5 @@
-server\CertificateUtils.class
-server\TopicManager.class
-server\ClientHandler.class
 server\BrokerServer.class
+server\TopicManager.class
 server\BrokerWindow.class
-server\ConfigLoader.class
+server\ClientHandler.class
 server\ServerMain.class
