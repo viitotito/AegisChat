@@ -27,9 +27,15 @@ public class CertificateUtils {
     }
 
     public static boolean verifyCertificate(X509Certificate certificate, X509Certificate issuerCertificate) {
+
         try {
+
+            certificate.checkValidity();
+
             certificate.verify(issuerCertificate.getPublicKey());
+
             return true;
+
         } catch (Exception e) {
             return false;
         }

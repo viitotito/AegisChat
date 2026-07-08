@@ -32,73 +32,88 @@ public class ClientHandler implements Runnable {
             input = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             output = new PrintWriter(socket.getOutputStream(), true);
 
-            output.println(new Message("REQUEST_CERT", "", "BROKER", ""));
+            X509Certificate brokerCert = server.getBrokerCertificate();
+            
+            X509Certificate caCert = CertificateUtils.loadCertificate(ConfigLoader.getClientCAPath());
+
+            send(new Message(
+                    "BROKER_CERT",
+                    "",
+                    "BROKER",
+                    CertificateUtils.encodeCertificate(brokerCert)
+            ));
+
             String line = input.readLine();
+
             if (line == null) {
                 throw new Exception("Conexão encerrada antes da autenticação");
             }
 
             Message authMessage = Message.fromString(line);
+
             if (!"CERT".equals(authMessage.getType())) {
-                send(new Message("ERROR", "AUTH", "BROKER", "Certificado não recebido."));
-                server.removeClient(this);
-                socket.close();
+                reject("Certificado não recebido.");
                 return;
             }
 
             X509Certificate clientCert = CertificateUtils.decodeCertificate(authMessage.getContent());
-            X509Certificate serverCert = CertificateUtils.loadCertificate(ConfigLoader.getServerCertPath());
 
-            if (!CertificateUtils.verifyCertificate(clientCert, serverCert)) {
-                send(new Message("ERROR", "AUTH", "BROKER", "Falha na autenticação do certificado."));
-                server.removeClient(this);
-                socket.close();
+            if (!CertificateUtils.verifyCertificate(clientCert, caCert)) {
+                reject("Falha na autenticação do certificado.");
                 return;
             }
 
             String certificateName = CertificateUtils.getCommonName(clientCert);
-            output.println(new Message("REQUEST_NAME", "", "BROKER", ""));
+
+            send(new Message(
+                    "REQUEST_NAME",
+                    "",
+                    "BROKER",
+                    ""
+            ));
 
             line = input.readLine();
+
             if (line == null) {
                 throw new Exception("Conexão encerrada antes de enviar o nome");
             }
 
             authMessage = Message.fromString(line);
+
             if (!"NAME".equals(authMessage.getType()) || authMessage.getSender().isEmpty()) {
-                send(new Message("ERROR", "AUTH", "BROKER", "Nome não informado."));
-                server.removeClient(this);
-                socket.close();
+                reject("Nome não informado.");
                 return;
             }
 
             clientName = authMessage.getSender();
+
             if (!clientName.equals(certificateName)) {
-                send(new Message("ERROR", "AUTH", "BROKER", "O nome fornecido não corresponde ao certificado."));
-                server.removeClient(this);
-                socket.close();
+                reject("O nome fornecido não corresponde ao certificado.");
                 return;
             }
 
             synchronized (topicManager) {
                 if (!topicManager.registerUser(clientName, this)) {
-                    send(new Message("ERROR", "", "BROKER", "Nome já está em uso."));
+                    reject("Nome já está em uso.");
                     server.log("Tentativa de conexão falhou: nome duplicado -> " + clientName);
-                    server.removeClient(this);
-                    socket.close();
                     return;
                 }
             }
 
             send(new Message("INFO", "", "BROKER", "Conectado como " + clientName));
+
             server.log("Cliente conectado: " + clientName);
+
             topicManager.deliverPendingMessages(clientName);
 
             String lineInput;
+
             while ((lineInput = input.readLine()) != null) {
+
                 Message msg = Message.fromString(lineInput);
 
                 switch (msg.getType()) {
+
                     case "CREATE":
                         if (topicManager.create(msg.getTopic(), clientName, this)) {
                             send(new Message("SUBSCRIBED", msg.getTopic(), "BROKER",
@@ -159,11 +174,18 @@ public class ClientHandler implements Runnable {
 
         } catch (Exception e) {
             System.out.println("Erro no cliente: " + e.getMessage());
-            topicManager.userDisconnected(clientName);
             server.removeClient(this);
+
         } finally {
             if (clientName != null) {
                 topicManager.userDisconnected(clientName);
+            }
+
+            try {
+                if (!socket.isClosed()) {
+                    socket.close();
+                }
+            } catch (IOException ignored) {
             }
         }
     }
@@ -177,5 +199,13 @@ public class ClientHandler implements Runnable {
             socket.close();
         } catch (IOException ignored) {
         }
+    }
+
+    private void reject(String message) throws IOException {
+        server.log("Falha na autenticação: " + message);
+
+        send(new Message("ERROR", "AUTH", "BROKER", message));
+        server.removeClient(this);
+        socket.close();
     }
 }

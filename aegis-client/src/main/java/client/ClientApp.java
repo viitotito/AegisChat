@@ -28,22 +28,13 @@ public class ClientApp {
     private PrintWriter out;
     private String failureReason = "";
 
-    public ClientApp(String host, int port, String name, ChatWindow window) {
-        this.host = host;
-        this.port = port;
-        this.name = name;
-        this.window = window;
-        this.clientCertPath = ConfigLoader.getClientCertPath();
-        this.serverCertPath = ConfigLoader.getServerCertPath();
-    }
-
     public ClientApp(String host, int port, String name, ChatWindow window, String selectedClientCertPath) {
         this.host = host;
         this.port = port;
         this.name = name;
         this.window = window;
         this.clientCertPath = selectedClientCertPath;
-        this.serverCertPath = ConfigLoader.getServerCertPath();
+        this.serverCertPath = ConfigLoader.getBrokerCAPath();
     }
 
     public ConnectResult connect() {
@@ -57,11 +48,11 @@ public class ClientApp {
         }
 
         X509Certificate clientCert;
-        X509Certificate serverCert;
+        X509Certificate caCert;
 
         try {
             clientCert = CertificateUtils.loadCertificate(clientCertPath);
-            serverCert = CertificateUtils.loadCertificate(serverCertPath);
+            caCert = CertificateUtils.loadCertificate(serverCertPath);
         } catch (IOException e) {
             closeSocket();
             failureReason = "Falha ao carregar certificados locais. Verifique os arquivos: " + clientCertPath + " e " + serverCertPath;
@@ -72,38 +63,58 @@ public class ClientApp {
             return ConnectResult.AUTH_FAILED;
         }
 
-        if (!CertificateUtils.verifyCertificate(clientCert, serverCert)) {
-            closeSocket();
-            failureReason = "Falha na autenticação do certificado. O certificado do cliente não foi assinado pelo servidor.";
-            return ConnectResult.AUTH_FAILED;
-        }
-
         try {
-            String request = in.readLine();
-            if (request == null) {
+
+            String response = in.readLine();
+
+            if (response == null) {
                 closeSocket();
                 failureReason = "O servidor não respondeu.";
                 return ConnectResult.SERVER_OFFLINE;
             }
 
-            Message requestMessage = Message.fromString(request);
-            if (!"REQUEST_CERT".equals(requestMessage.getType())) {
+            Message brokerMessage = Message.fromString(response);
+
+            if (!"BROKER_CERT".equals(brokerMessage.getType())) {
                 closeSocket();
-                failureReason = "Resposta inesperada do servidor.";
-                return ConnectResult.SERVER_OFFLINE;
+                failureReason = "O broker não enviou seu certificado.";
+                return ConnectResult.AUTH_FAILED;
             }
 
-            out.println(new Message("CERT", "", "", CertificateUtils.encodeCertificate(clientCert)));
+            X509Certificate brokerCertificate = CertificateUtils.decodeCertificate(
+                    brokerMessage.getContent()
+            );
 
-            request = in.readLine();
-            if (request == null) {
+            if (!CertificateUtils.verifyCertificate(
+                    brokerCertificate,
+                    caCert
+            )) {
+
+                closeSocket();
+
+                failureReason = "O certificado do broker é inválido.";
+
+                return ConnectResult.AUTH_FAILED;
+            }
+
+            out.println(
+                    new Message(
+                            "CERT",
+                            "",
+                            "",
+                            CertificateUtils.encodeCertificate(clientCert)
+                    )
+            );
+
+            response = in.readLine();
+            if (response == null) {
                 closeSocket();
                 failureReason = "O servidor não respondeu ao pedido de nome.";
                 return ConnectResult.SERVER_OFFLINE;
             }
 
-            requestMessage = Message.fromString(request);
-            if (!"REQUEST_NAME".equals(requestMessage.getType())) {
+            brokerMessage = Message.fromString(response);
+            if (!"REQUEST_NAME".equals(brokerMessage.getType())) {
                 closeSocket();
                 failureReason = "Resposta inesperada do servidor.";
                 return ConnectResult.SERVER_OFFLINE;
@@ -111,7 +122,7 @@ public class ClientApp {
 
             out.println(new Message("NAME", "", name, ""));
 
-            String response = in.readLine();
+            response = in.readLine();
             if (response == null) {
                 closeSocket();
                 failureReason = "O servidor não respondeu após o envio do nome.";
