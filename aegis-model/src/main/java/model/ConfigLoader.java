@@ -1,4 +1,4 @@
-package server;
+package model;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -44,6 +44,44 @@ public class ConfigLoader {
         return props;
     }
     
+    public static String getClientCertPath() {
+        // PRIORIDADE 1: Tenta obter CLIENT_ID da variável de ambiente ou propriedade do sistema
+        String clientId = System.getenv("CLIENT_ID");
+        if (clientId == null) {
+            clientId = System.getProperty("client.id");
+        }
+        
+        if (clientId != null && !clientId.isEmpty()) {
+            String certFileName = "client" + clientId + "-cert.crt";
+            System.out.println("[ConfigLoader] CLIENT_ID encontrado: " + clientId + " -> usando " + certFileName);
+            Path resolvedPath = CERTS_DIR.resolve(certFileName);
+            if (!Files.exists(resolvedPath)) {
+                throw new RuntimeException("ERRO: Certificado do cliente não encontrado em " + resolvedPath);
+            }
+            return resolvedPath.toString();
+        }
+        
+        // PRIORIDADE 2: Tenta ler do application.properties em certs/
+        String certPath = properties.getProperty("client.cert.path");
+        if (certPath != null && !certPath.isEmpty()) {
+            System.out.println("[ConfigLoader] Usando client.cert.path do application.properties: " + certPath);
+            Path resolvedPath = resolvePath(certPath);
+            if (!Files.exists(resolvedPath)) {
+                throw new RuntimeException("ERRO: Certificado do cliente não encontrado em " + resolvedPath);
+            }
+            return resolvedPath.toString();
+        }
+        
+        // FALLBACK: certificado padrão
+        String certFileName = "client-cert.crt";
+        System.out.println("[ConfigLoader] Usando certificado padrão (nenhum CLIENT_ID ou properties definido)");
+        Path resolvedPath = CERTS_DIR.resolve(certFileName);
+        if (!Files.exists(resolvedPath)) {
+            throw new RuntimeException("ERRO: Certificado do cliente não encontrado em " + resolvedPath);
+        }
+        return resolvedPath.toString();
+    }
+    
     public static String getServerCertPath() {
         // Primeiro tenta obter do properties (se existir application.properties em certs/)
         String certPath = properties.getProperty("server.cert.path");
@@ -63,6 +101,10 @@ public class ConfigLoader {
             throw new RuntimeException("ERRO: Certificado da CA do servidor não encontrado em " + certFilePath);
         }
         return certFilePath.toString();
+    }
+    
+    public static Path getCertsDirectoryPath() {
+        return CERTS_DIR;
     }
     
     private static Path resolvePath(String pathStr) {

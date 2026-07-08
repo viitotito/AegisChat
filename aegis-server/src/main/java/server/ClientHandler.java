@@ -1,10 +1,12 @@
 package server;
 
+import model.ConfigLoader;
 import model.Message;
 
 import java.io.*;
 import java.net.Socket;
 import java.security.cert.X509Certificate;
+import model.CertificateUtils;
 
 public class ClientHandler implements Runnable {
 
