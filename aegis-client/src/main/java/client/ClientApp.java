@@ -9,6 +9,8 @@ import java.io.PrintWriter;
 import java.net.Socket;
 import java.security.cert.X509Certificate;
 import javax.swing.JOptionPane;
+import model.CertificateUtils;
+import model.ConfigLoader;
 import model.ConnectResult;
 
 public class ClientApp {
